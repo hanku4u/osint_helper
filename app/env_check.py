@@ -1,4 +1,5 @@
 import sys
+import os
 import subprocess
 import importlib
 from rich.console import Console
@@ -6,7 +7,6 @@ from rich.prompt import Confirm
 
 console = Console()
 
-# Add any new dependencies here
 REQUIRED_PACKAGES = [
     "rich",
     "questionary",
@@ -32,8 +32,18 @@ def check_environment():
 
     if Confirm.ask("Would you like to install them now?", default=True):
         try:
-            subprocess.check_call(["pip", "install", *missing])
+            subprocess.check_call(["uv", "pip", "install", *missing])
             console.print("[green]Dependencies installed successfully.[/green]")
+
+            # ✅ Prevent infinite loop
+            if os.environ.get("OSINT_RESTARTED") != "1":
+                console.print("[bold blue]Restarting application...[/bold blue]")
+                os.environ["OSINT_RESTARTED"] = "1"
+                subprocess.check_call([sys.executable, sys.argv[0]], env=os.environ)
+                sys.exit(0)
+            else:
+                console.print("[yellow]Already restarted once. Skipping auto-restart.[/yellow]")
+
         except subprocess.CalledProcessError:
             console.print("[red]Failed to install dependencies. Please install manually.[/red]")
             sys.exit(1)
