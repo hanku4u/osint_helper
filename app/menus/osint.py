@@ -2,7 +2,7 @@ from rich.console import Console
 from rich.prompt import Prompt, IntPrompt
 from rich.panel import Panel
 import os
-from runners.theharvester_runner import run_theharvester as run_theharvester_runner
+from runners import run_theharvester, run_spiderfoot_webui
 
 console = Console()
 
@@ -28,16 +28,16 @@ def run_theharvester(session_manager):
     console.print("[bold blue]Running theHarvester...[/bold blue]")
     domain = Prompt.ask("Enter the domain to search")
     console.print(f"[italic yellow]Executing theHarvester for domain: {domain}[/italic yellow]")
-    run_theharvester_runner(domain, session_manager)
+    run_theharvester(domain, session_manager)
 
-def run_spiderfoot():
+def run_spiderfoot(session_manager):
     api_key = check_api_key("SpiderFoot", "SPIDERFOOT_API_KEY")
     if not api_key:
         return
     console.print("[bold blue]Running SpiderFoot...[/bold blue]")
     target = Prompt.ask("Enter the target (e.g., domain, IP, etc.)")
     console.print(f"[italic yellow]Executing SpiderFoot for target: {target}[/italic yellow]")
-    # Add the actual execution logic here
+    run_spiderfoot_webui(session_manager)
 
 def run_reconng():
     console.print("[bold blue]Running Recon-ng...[/bold blue]")
@@ -58,7 +58,7 @@ def osint_tools_menu(session_manager):
         if choice == 1:
             run_theharvester(session_manager)
         elif choice == 2:
-            run_spiderfoot()
+            run_spiderfoot(session_manager)
         elif choice == 3:
             run_reconng()
         elif choice == 4:
