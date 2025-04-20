@@ -31,9 +31,6 @@ def run_theharvester(session_manager):
     run_theharvester(domain, session_manager)
 
 def run_spiderfoot(session_manager):
-    api_key = check_api_key("SpiderFoot", "SPIDERFOOT_API_KEY")
-    if not api_key:
-        return
     console.print("[bold blue]Running SpiderFoot...[/bold blue]")
     target = Prompt.ask("Enter the target (e.g., domain, IP, etc.)")
     console.print(f"[italic yellow]Executing SpiderFoot for target: {target}[/italic yellow]")
