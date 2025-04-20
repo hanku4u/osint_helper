@@ -32,8 +32,7 @@ def run_theharvester(session_manager):
 
 def run_spiderfoot(session_manager):
     console.print("[bold blue]Running SpiderFoot...[/bold blue]")
-    target = Prompt.ask("Enter the target (e.g., domain, IP, etc.)")
-    console.print(f"[italic yellow]Executing SpiderFoot for target: {target}[/italic yellow]")
+    console.print(f"[italic yellow]Opening SpiderFoot Web UI...[/italic yellow]")
     run_spiderfoot_webui(session_manager)
 
 def run_reconng():
