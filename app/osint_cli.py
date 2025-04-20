@@ -54,7 +54,7 @@ def tools_menu(session):
         elif choice == "Export Report":
             export_session_report(session)
         elif choice == "Exit":
-            console.print("\n[bold red]Goodbye![/bold red]")
+            console.print("\n[bold red]Dueces! You'll be back...they always come back.[/bold red]")
             break
 
 def view_results_menu(session):
