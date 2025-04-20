@@ -43,7 +43,7 @@ def run_theharvester(domain, session_manager):
         "-d", domain,
         "-b", sources,
         "-l", str(limit),
-        "-s", str(start),
+        f"-s{start}",
         "-f", output_base_path
     ]
 
