@@ -32,7 +32,7 @@ def check_environment():
 
     if Confirm.ask("Would you like to install them now?", default=True):
         try:
-            subprocess.check_call(["uv", "pip", "install", *missing])
+            subprocess.check_call(["pip", "install", *missing])
             console.print("[green]Dependencies installed successfully.[/green]")
 
             # ✅ Prevent infinite loop
