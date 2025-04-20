@@ -3,7 +3,7 @@ name = "osint-helper"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.12.10"
+requires-python = ">=3.11"
 dependencies = [
     "rich>=14.0.0",
 ]
