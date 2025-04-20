@@ -1,5 +1,3 @@
-# runners/spiderfoot_runner.py
-
 import subprocess
 import webbrowser
 from rich.console import Console
@@ -8,7 +6,7 @@ from rich.prompt import Prompt
 console = Console()
 
 def run_spiderfoot_webui(session_manager=None):
-    console.print("[green]Starting SpiderFoot Web UI on [bold]127.0.0.1:80[/bold]...[/green]")
+    console.print("[green]Starting SpiderFoot Web UI on [bold]http://127.0.0.1:80[/bold]...[/green]")
 
     try:
         subprocess.Popen(["spiderfoot", "-l", "127.0.0.1:80"])
@@ -20,11 +18,14 @@ def run_spiderfoot_webui(session_manager=None):
         console.print(f"[bold red]Failed to start SpiderFoot:[/bold red] {e}")
         return
 
-    # Open Firefox to the UI
+    url = "http://127.0.0.1:80"
+
+    # Explicitly launch Firefox with HTTP
     try:
-        webbrowser.get("firefox").open("http://127.0.0.1:80")
-    except webbrowser.Error:
-        console.print("[yellow]Could not open Firefox. Trying the default browser instead...[/yellow]")
-        webbrowser.open("http://127.0.0.1:80")
+        subprocess.Popen(["firefox", url])
+        console.print(f"[green]Firefox opened at {url}[/green]")
+    except FileNotFoundError:
+        console.print("[yellow]Firefox not found. Trying default system browser instead...[/yellow]")
+        webbrowser.open(url)
 
     Prompt.ask("\n[dim]Press Enter to return to the OSINT Tools menu[/dim]")
