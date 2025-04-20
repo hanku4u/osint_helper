@@ -18,7 +18,7 @@ def run_spiderfoot_webui(session_manager=None):
         console.print(f"[bold red]Failed to start SpiderFoot:[/bold red] {e}")
         return
 
-    url = "http://127.0.0.1:80"
+    url = "http://127.0.0.1"
 
     # Explicitly launch Firefox with HTTP
     try:
