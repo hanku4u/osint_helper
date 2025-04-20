@@ -3,7 +3,6 @@
 import subprocess
 import os
 import json
-import glob
 from datetime import datetime
 from rich.console import Console
 from rich.prompt import Prompt, IntPrompt
@@ -49,13 +48,13 @@ def run_theharvester(session_manager):
         start = IntPrompt.ask("Start from result number", default=DEFAULT_START)
         verbose = Prompt.ask("Verbose mode?", choices=["y", "n"], default="n").lower() == "y"
 
-    # Prepare file paths
+    # Prepare output path (no timestamp)
     output_dir = session_manager.get_output_path_for_tool("theHarvester")
-    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    base_filename = f"theharvester_{domain}_{timestamp}"
+    base_filename = f"theharvester_{domain}"
     output_base_path = os.path.join(output_dir, base_filename)
+    json_path = f"{output_base_path}.json"
 
-    # Build command
+    # Build theHarvester command
     cmd = [
         "theHarvester",
         "-d", domain,
@@ -75,11 +74,7 @@ def run_theharvester(session_manager):
         console.print(f"[bold red]Error:[/bold red] Failed to run theHarvester.")
         return
 
-    # Try to locate the actual JSON output file
-    json_candidates = glob.glob(f"{output_base_path}*.json")
-    json_path = json_candidates[0] if json_candidates else None
-
-    if json_path and os.path.exists(json_path):
+    if os.path.exists(json_path):
         console.print(f"[green]theHarvester output saved to:[/green] {json_path}")
 
         with open(json_path, "r") as f:
@@ -109,4 +104,4 @@ def run_theharvester(session_manager):
         )
 
     else:
-        console.print(f"[yellow]Warning: JSON output file not found for base path {output_base_path}[/yellow]")
+        console.print(f"[yellow]Warning: JSON output file not found at {json_path}[/yellow]")
