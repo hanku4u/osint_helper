@@ -11,6 +11,28 @@ import questionary
 console = Console()
 
 def run_searchsploit(session_manager):
+    def get_search_terms():
+        if use_services == "Select Nmap services":
+            services = session_manager.get_result_pool().get("nmap_services", [])
+            if not services:
+                console.print("[yellow]No Nmap services available to search.[/yellow]")
+                return []
+
+            labels = [
+                f"{s['target']} → {s['port']} {s['service']} {s['version']}"
+                for s in services
+            ]
+            selected = questionary.checkbox("Select services to search:", choices=labels).ask()
+            return [
+                f"{s['service']} {s['version']}".strip()
+                for label in selected
+                for s in services
+                if label == f"{s['target']} → {s['port']} {s['service']} {s['version']}"
+            ]
+
+        elif use_services == "Enter a manual search term":
+            return [Prompt.ask("Enter your search query")]
+
     use_services = questionary.select(
         "Search exploits by:",
         choices=["Select Nmap services", "Enter a manual search term", "Cancel"]
@@ -19,33 +41,9 @@ def run_searchsploit(session_manager):
     if use_services == "Cancel":
         return
 
-    search_terms = []
-
-    if use_services == "Select Nmap services":
-        services = session_manager.get_result_pool().get("nmap_services", [])
-        if not services:
-            console.print("[yellow]No Nmap services available to search.[/yellow]")
-            return
-
-        labels = [
-            f"{s['target']} → {s['port']} {s['service']} {s['version']}"
-            for s in services
-        ]
-        selected = questionary.checkbox("Select services to search:", choices=labels).ask()
-
-        if not selected:
-            return
-
-        for label in selected:
-            for service in services:
-                match_str = f"{service['target']} → {service['port']} {service['service']} {service['version']}"
-                if label == match_str:
-                    query = f"{service['service']} {service['version']}".strip()
-                    search_terms.append(query)
-
-    elif use_services == "Enter a manual search term":
-        query = Prompt.ask("Enter your search query")
-        search_terms.append(query)
+    search_terms = get_search_terms()
+    if not search_terms:
+        return
 
     # Run searchsploit for each search term
     output_dir = session_manager.get_output_path_for_tool("searchsploit")

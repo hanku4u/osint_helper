@@ -16,9 +16,12 @@ DEFAULT_START = 0
 
 # List of valid sources for theHarvester
 VALID_SOURCES = [
-    "baidu", "bing", "crtsh", "duckduckgo", "google", "hunter", "intelx",
-    "linkedin", "netcraft", "otx", "qwant", "rapiddns", "securityTrails",
-    "sublist3r", "threatcrowd", "trello", "twitter", "virustotal", "yahoo"
+    "anubis", "baidu", "bevigil", "binaryedge", "bing", "bingapi", "bufferoverun", "brave",
+    "censys", "certspotter", "criminalip", "crtsh", "dnsdumpster", "duckduckgo", "fullhunt",
+    "github-code", "hackertarget", "hunter", "hunterhow", "intelx", "netlas", "onyphe", "otx",
+    "pentesttools", "projectdiscovery", "rapiddns", "rocketreach", "securityTrails", "sitedossier",
+    "subdomaincenter", "subdomainfinderc99", "threatminer", "tomba", "urlscan", "virustotal",
+    "yahoo", "zoomeye" 
 ]
 
 def run_theharvester(session_manager):

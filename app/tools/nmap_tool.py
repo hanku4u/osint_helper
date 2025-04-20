@@ -19,17 +19,11 @@ def parse_nmap_output(text):
         if re.match(r"PORT\s+STATE\s+SERVICE", line):
             parsing_ports = True
             continue
-        if parsing_ports:
-            if not line.strip():
-                break  # End of port section
-            parts = line.split()
-            if len(parts) >= 3:
-                port_proto = parts[0]      # e.g. 80/tcp
-                state = parts[1]           # e.g. open
-                service = parts[2]         # e.g. http
-                version = " ".join(parts[3:]) if len(parts) > 3 else ""
-                if state == "open":
-                    results.append((port_proto, service, version))
+        if parsing_ports and line.strip():
+            match = re.match(r"(\d+/[a-z]+)\s+open\s+(\S+)\s*(.*)", line)
+            if match:
+                port_proto, service, version = match.groups()
+                results.append((port_proto, service, version.strip()))
     return results
 
 def display_port_summary(target, parsed_results):

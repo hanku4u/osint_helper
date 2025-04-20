@@ -78,21 +78,16 @@ class SessionManager:
 
         current_values = self.session_data["result_pool"][key]
 
-        if isinstance(current_values, list):
-            if isinstance(values, list):
-                if values and isinstance(values[0], dict):
-                    for item in values:
-                        if item not in current_values:
-                            current_values.append(item)
-                else:
-                    current_values.extend(v for v in values if v not in current_values)
-            else:
-                if values not in current_values:
-                    current_values.append(values)
+        if isinstance(values, list):
+            for item in values:
+                if item not in current_values:
+                    current_values.append(item)
+        elif values not in current_values:
+            current_values.append(values)
 
-            self.session_data["result_pool"][key] = current_values
-            console.print(f"[blue]Updating result pool '{key}' with:[/blue] {values}")
-            self.save_session()
+        self.session_data["result_pool"][key] = current_values
+        console.print(f"[blue]Updating result pool '{key}' with:[/blue] {values}")
+        self.save_session()
 
     def get_result_pool(self):
         return self.session_data["result_pool"]
