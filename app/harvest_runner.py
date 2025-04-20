@@ -20,6 +20,7 @@ def run_theharvester(session_manager):
     domain = Prompt.ask("Enter the domain to search")
 
     # Show the default values before asking
+    print()
     console.print(Panel.fit(
         f"[bold]Default Arguments:[/bold]\n"
         f"- Sources: [green]{DEFAULT_SOURCES}[/green]\n"
@@ -61,7 +62,7 @@ def run_theharvester(session_manager):
         "-d", domain,
         "-b", sources,
         "-l", str(limit),
-        "-s", str(start),
+        "-S", str(start),
         "-f", output_base_path
     ]
     if verbose:
