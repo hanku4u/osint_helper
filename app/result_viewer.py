@@ -50,15 +50,22 @@ def select_from_result_pool(session_manager, type_filter: str) -> list[str]:
         console.print(f"[yellow]No values found for type: {type_filter}[/yellow]")
         return []
 
+    # Add "Select All" option at the top of the list
+    choices = ["Select All"] + values
     selected = questionary.checkbox(
         f"Select {type_filter} values to use:",
-        choices=values
+        choices=choices
     ).ask()
 
     if not selected:
         console.print("[italic]No selections made.[/italic]")
+        return []
 
-    return selected or []
+    # Handle "Select All" option
+    if "Select All" in selected:
+        return values  # Return all values if "Select All" is selected
+
+    return selected
 
 def view_nmap_services(session_manager):
     services = session_manager.get_result_pool().get("nmap_services", [])
