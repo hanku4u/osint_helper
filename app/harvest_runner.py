@@ -19,6 +19,17 @@ def run_theharvester(session_manager):
 
     domain = Prompt.ask("Enter the domain to search")
 
+    # Show the default values before asking
+    console.print(Panel.fit(
+        f"[bold]Default Arguments:[/bold]\n"
+        f"- Sources: [green]{DEFAULT_SOURCES}[/green]\n"
+        f"- Limit: [green]{DEFAULT_LIMIT}[/green]\n"
+        f"- Start: [green]{DEFAULT_START}[/green]\n"
+        f"- Verbose: [green]False[/green]",
+        title="Default Settings",
+        border_style="cyan"
+    ))
+
     use_defaults = Prompt.ask(
         "Use default settings? [sources=all, limit=100, start=0, no verbose]",
         choices=["y", "n"],
