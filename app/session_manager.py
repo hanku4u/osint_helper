@@ -91,6 +91,7 @@ class SessionManager:
                     current_values.append(values)
 
             self.session_data["result_pool"][key] = current_values
+            console.print(f"[blue]Updating result pool '{key}' with:[/blue] {values}")
             self.save_session()
 
     def get_result_pool(self):

@@ -97,14 +97,14 @@ def run_theharvester(session_manager):
 
         console.print(f"[cyan]Found:[/cyan] {len(emails)} emails, {len(hosts)} hosts, {len(ips)} IPs")
 
-        console.print(f"[blue]Parsed Emails:[/blue] {emails}")
-        console.print(f"[blue]Parsed Hosts:[/blue] {hosts}")
-        console.print(f"[blue]Parsed IPs:[/blue] {ips}")
-        print()
-
         session_manager.update_result_pool("emails", emails)
         session_manager.update_result_pool("subdomains", hosts)
         session_manager.update_result_pool("ips", ips)
+
+        console.print(f"[green]Added {len(emails)} emails to session[/green]")
+        console.print(f"[green]Added {len(hosts)} subdomains to session[/green]")
+        console.print(f"[green]Added {len(ips)} IPs to session[/green]")
+        console.print(f"[green]Saved session file to: {session_manager.session_file}[/green]")
 
         session_manager.add_tool_run(
             tool_name="theHarvester",
