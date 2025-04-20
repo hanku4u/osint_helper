@@ -82,15 +82,16 @@ def run_theharvester(session_manager):
         with open(json_path, "r") as f:
             data = json.load(f)
 
-        emails = [e["email"] for e in data.get("emails", [])]
+        # Safely extract emails
+        emails = [e["email"] for e in data.get("emails", []) if isinstance(e, dict) and "email" in e]
 
         host_entries = data.get("hosts", [])
         if host_entries and isinstance(host_entries[0], str):
             hosts = host_entries
             ips = []
         else:
-            hosts = [h["hostname"] for h in host_entries if "hostname" in h]
-            ips = [h["ip"] for h in host_entries if "ip" in h]
+            hosts = [h["hostname"] for h in host_entries if isinstance(h, dict) and "hostname" in h]
+            ips = [h["ip"] for h in host_entries if isinstance(h, dict) and "ip" in h]
 
         console.print(f"[cyan]Found:[/cyan] {len(emails)} emails, {len(hosts)} hosts, {len(ips)} IPs")
 
