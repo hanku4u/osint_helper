@@ -83,8 +83,17 @@ def run_theharvester(session_manager):
             data = json.load(f)
 
         emails = [e["email"] for e in data.get("emails", [])]
-        hosts = [h["hostname"] for h in data.get("hosts", [])]
-        ips = [h["ip"] for h in data.get("hosts", []) if "ip" in h]
+        host_entries = data.get("hosts", [])
+
+        # If it's a list of strings (as in your case)
+        if host_entries and isinstance(host_entries[0], str):
+            hosts = host_entries
+            ips = []
+        # If it's a list of dicts (older output format)
+        else:
+            hosts = [h["hostname"] for h in host_entries if "hostname" in h]
+            ips = [h["ip"] for h in host_entries if "ip" in h]
+
 
         console.print(f"[cyan]Found:[/cyan] {len(emails)} emails, {len(hosts)} hosts, {len(ips)} IPs")
 
