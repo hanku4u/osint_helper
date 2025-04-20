@@ -1,12 +1,13 @@
 from env_check import check_environment
 check_environment()
 
+from session_manager import SessionManager
 from rich.console import Console
 from rich.prompt import IntPrompt
 from rich.panel import Panel
 import sys
 
-# Import menu functions
+# Menus
 from menus.osint import osint_tools_menu
 from menus.domain import domain_menu
 from menus.people import people_menu
@@ -15,6 +16,10 @@ from menus.metadata import metadata_menu
 from menus.results import load_results_menu
 
 console = Console()
+
+# Create global session manager
+session = SessionManager()
+session.init_session()
 
 def print_header(title: str):
     console.clear()
@@ -32,10 +37,10 @@ def main_menu():
         console.print("6. Load Results / View Past Data")
         console.print("7. Quit")
 
-        choice = IntPrompt.ask("\nSelect a menu")
+        choice = IntPrompt.ask("\nEnter your choice", choices=[str(i) for i in range(1, 8)])
 
         if choice == 1:
-            osint_tools_menu()
+            osint_tools_menu(session)
         elif choice == 2:
             domain_menu()
         elif choice == 3:

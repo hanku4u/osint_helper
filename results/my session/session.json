@@ -1,0 +1,10 @@
+{
+    "tools_run": [],
+    "result_pool": {
+        "emails": [],
+        "domains": [],
+        "subdomains": [],
+        "ips": [],
+        "usernames": []
+    }
+}
