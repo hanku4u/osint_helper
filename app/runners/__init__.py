@@ -1,2 +1,0 @@
-from .spiderfoot_runner import run_spiderfoot_webui
-from .theharvester_runner import run_theharvester

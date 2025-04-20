@@ -1,59 +1,76 @@
-from env_check import check_environment
-check_environment()
-
-from session_manager import SessionManager
 from rich.console import Console
-from rich.prompt import IntPrompt
-from rich.panel import Panel
-import sys
-
-# Menus
-from menus.osint import osint_tools_menu
-from menus.domain import domain_menu
-from menus.people import people_menu
-from menus.infrastructure import infrastructure_menu
-from menus.metadata import metadata_menu
-from menus.results import load_results_menu
+import questionary
+from env_check import check_environment
+from session_manager import SessionManager
+from harvest_runner import run_theharvester
+from tools import dns_tools_menu, run_nmap, run_searchsploit, run_shodan
+from result_viewer import *
+from report_exporter import export_session_report
 
 console = Console()
 
-# Create global session manager
-session = SessionManager()
-session.init_session()
+def select_option(message: str, options: list[str]) -> str:
+    return questionary.select(message, choices=options).ask()
 
-def print_header(title: str):
-    console.clear()
-    console.print(Panel(title, expand=False, style="bold green"))
-
-def main_menu():
+def view_results_menu(session):
     while True:
-        print_header("🔧 OSINT Toolkit - Main Menu")
-        console.print("[bold]Select a category:[/bold]\n")
-        console.print("1. OSINT Tools")
-        console.print("2. Domain & Subdomain Recon")
-        console.print("3. Email & People Search")
-        console.print("4. Infrastructure Scanning")
-        console.print("5. Metadata Analysis")
-        console.print("6. Load Results / View Past Data")
-        console.print("7. Quit")
+        choice = select_option("What would you like to view?", [
+            "theHarvester Results",
+            "Nmap Discovered Services",
+            "DNS Tool Outputs",
+            "Searchsploit Results",
+            "Shodan Results",
+            "Export Session Report",
+            "Back"
+        ])
 
-        choice = IntPrompt.ask("\nEnter your choice", choices=[str(i) for i in range(1, 8)])
+        if choice == "theHarvester Results":
+            review_results(session)
+        elif choice == "Nmap Discovered Services":
+            view_nmap_services(session)
+        elif choice == "DNS Tool Outputs":
+            view_dns_results(session)
+        elif choice == "Searchsploit Results":
+            view_searchsploit_results(session)
+        elif choice == "Shodan Results":
+            view_shodan_results(session)
+        elif choice == "Export Session Report":
+            export_session_report(session)
+        elif choice == "Back":
+            break
 
-        if choice == 1:
-            osint_tools_menu(session)
-        elif choice == 2:
-            domain_menu()
-        elif choice == 3:
-            people_menu()
-        elif choice == 4:
-            infrastructure_menu()
-        elif choice == 5:
-            metadata_menu()
-        elif choice == 6:
-            load_results_menu()
-        elif choice == 7:
-            console.print("\n[bold red]Goodbye![/bold red]")
-            sys.exit()
+def tools_menu(session):
+    while True:
+        choice = select_option("Choose a post-harvest tool to run:", [
+            "DNS & Subdomain Enumeration",
+            "Nmap",
+            "Searchsploit",
+            "Shodan",
+            "View Results",
+            "Exit"
+        ])
+
+        if choice == "DNS & Subdomain Enumeration":
+            dns_tools_menu(session)
+        elif choice == "Nmap":
+            run_nmap(session)
+        elif choice == "Searchsploit":
+            run_searchsploit(session)
+        elif choice == "Shodan":
+            run_shodan(session)
+        elif choice == "View Results":
+            view_results_menu(session)
+        elif choice == "Exit":
+            break
+
+def main():
+    check_environment()
+    session = SessionManager()
+    session.init_session()
+
+    run_theharvester(session)
+    review_results(session)
+    tools_menu(session)
 
 if __name__ == "__main__":
-    main_menu()
+    main()

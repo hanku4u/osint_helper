@@ -5,5 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "questionary>=2.1.0",
     "rich>=14.0.0",
+    "shodan>=1.31.0",
 ]
