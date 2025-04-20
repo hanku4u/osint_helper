@@ -1,37 +1,42 @@
-# env_check.py
-
 import sys
 import subprocess
-import importlib.util
-import shutil
+import importlib
+from rich.console import Console
+from rich.prompt import Confirm
 
-MIN_PYTHON = (3, 11)
-REQUIRED_PACKAGES = ["rich"]
+console = Console()
 
-def check_python_version():
-    if sys.version_info < MIN_PYTHON:
-        sys.exit(f"[ERROR] Python {MIN_PYTHON[0]}.{MIN_PYTHON[1]} or higher is required.\nYou have Python {sys.version_info.major}.{sys.version_info.minor}")
-
-def is_package_installed(package_name):
-    return importlib.util.find_spec(package_name) is not None
-
-def install_missing_packages(missing):
-    uv_path = shutil.which("uv")
-    if not uv_path:
-        sys.exit("[ERROR] 'uv' is not installed or not in your PATH. Please install it manually first.")
-
-    print(f"\n[INFO] Missing required packages: {', '.join(missing)}")
-    confirm = input("Would you like to install them automatically using uv? (y/N): ").strip().lower()
-    if confirm == "y":
-        try:
-            subprocess.run(["uv", "pip", "install", *missing], check=True)
-        except subprocess.CalledProcessError:
-            sys.exit("[ERROR] Failed to install required packages with uv.")
-    else:
-        sys.exit("[INFO] Exiting so you can install them manually.")
+# Add any new dependencies here
+REQUIRED_PACKAGES = [
+    "rich",
+    "questionary",
+    "shodan"
+]
 
 def check_environment():
-    check_python_version()
-    missing = [pkg for pkg in REQUIRED_PACKAGES if not is_package_installed(pkg)]
-    if missing:
-        install_missing_packages(missing)
+    console.print("[bold cyan]Checking environment...[/bold cyan]")
+
+    missing = []
+
+    for pkg in REQUIRED_PACKAGES:
+        try:
+            importlib.import_module(pkg)
+        except ImportError:
+            missing.append(pkg)
+
+    if not missing:
+        console.print("[green]All dependencies are satisfied.[/green]")
+        return
+
+    console.print(f"[yellow]Missing packages:[/yellow] {', '.join(missing)}")
+
+    if Confirm.ask("Would you like to install them now?", default=True):
+        try:
+            subprocess.check_call(["uv", "pip", "install", *missing])
+            console.print("[green]Dependencies installed successfully.[/green]")
+        except subprocess.CalledProcessError:
+            console.print("[red]Failed to install dependencies. Please install manually.[/red]")
+            sys.exit(1)
+    else:
+        console.print("[red]Cannot continue without required packages.[/red]")
+        sys.exit(1)
