@@ -5,7 +5,7 @@ import subprocess
 import importlib.util
 import shutil
 
-MIN_PYTHON = (3, 12, 10)
+MIN_PYTHON = (3, 11)
 REQUIRED_PACKAGES = ["rich"]
 
 def check_python_version():
