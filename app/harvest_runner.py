@@ -54,8 +54,8 @@ def run_theharvester(session_manager):
 
     safe_name = domain.replace(".", "_")  # Safe for filename
     base_filename = f"theharvester_{safe_name}"
-    output_base_path = os.path.join(output_dir, base_filename)
-    json_path = f"{output_base_path}.json"
+    json_filename = f"{base_filename}.json"
+    json_path = os.path.join(output_dir, json_filename)
 
     # Build theHarvester command
     cmd = [
@@ -64,7 +64,7 @@ def run_theharvester(session_manager):
         "-b", sources,
         "-l", str(limit),
         "-S", str(start),
-        "-f", output_base_path
+        "-f", base_filename
     ]
     if verbose:
         cmd.append("-v")
