@@ -48,14 +48,14 @@ def run_theharvester(session_manager):
         start = IntPrompt.ask("Start from result number", default=DEFAULT_START)
         verbose = Prompt.ask("Verbose mode?", choices=["y", "n"], default="n").lower() == "y"
 
-    # Prepare output file path
+    # Prepare safe filename, keep domain intact
     output_dir = session_manager.get_output_path_for_tool("theHarvester")
-    safe_name = domain.replace(".", "_")  # works for domains or IPs
+    safe_name = domain.replace(".", "_")
     base_filename = f"theharvester_{safe_name}"
     output_base_path = os.path.join(output_dir, base_filename)
     json_path = f"{output_base_path}.json"
 
-    # Build theHarvester command
+    # Build theHarvester command with original domain, safe filename
     cmd = [
         "theHarvester",
         "-d", domain,
@@ -75,6 +75,7 @@ def run_theharvester(session_manager):
         console.print(f"[bold red]Error:[/bold red] Failed to run theHarvester.")
         return
 
+    # Check for output using the safe filename
     if os.path.exists(json_path):
         console.print(f"[green]theHarvester output saved to:[/green] {json_path}")
 
