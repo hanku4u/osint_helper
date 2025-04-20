@@ -3,6 +3,7 @@
 import subprocess
 import os
 import json
+import glob
 from datetime import datetime
 from rich.console import Console
 from rich.prompt import Prompt, IntPrompt
@@ -20,7 +21,6 @@ def run_theharvester(session_manager):
     domain = Prompt.ask("Enter the domain to search")
 
     # Show the default values before asking
-    print()
     console.print(Panel.fit(
         f"[bold]Default Arguments:[/bold]\n"
         f"- Sources: [green]{DEFAULT_SOURCES}[/green]\n"
@@ -54,7 +54,6 @@ def run_theharvester(session_manager):
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     base_filename = f"theharvester_{domain}_{timestamp}"
     output_base_path = os.path.join(output_dir, base_filename)
-    json_path = f"{output_base_path}.json"
 
     # Build command
     cmd = [
@@ -72,28 +71,29 @@ def run_theharvester(session_manager):
 
     try:
         subprocess.run(cmd, check=True)
-        console.print(f"[green]theHarvester output saved to:[/green] {json_path}")
     except subprocess.CalledProcessError:
         console.print(f"[bold red]Error:[/bold red] Failed to run theHarvester.")
         return
 
-    # Parse results
-    if os.path.exists(json_path):
+    # Try to locate the actual JSON output file
+    json_candidates = glob.glob(f"{output_base_path}*.json")
+    json_path = json_candidates[0] if json_candidates else None
+
+    if json_path and os.path.exists(json_path):
+        console.print(f"[green]theHarvester output saved to:[/green] {json_path}")
+
         with open(json_path, "r") as f:
             data = json.load(f)
 
         emails = [e["email"] for e in data.get("emails", [])]
-        host_entries = data.get("hosts", [])
 
-        # If it's a list of strings (as in your case)
+        host_entries = data.get("hosts", [])
         if host_entries and isinstance(host_entries[0], str):
             hosts = host_entries
             ips = []
-        # If it's a list of dicts (older output format)
         else:
             hosts = [h["hostname"] for h in host_entries if "hostname" in h]
             ips = [h["ip"] for h in host_entries if "ip" in h]
-
 
         console.print(f"[cyan]Found:[/cyan] {len(emails)} emails, {len(hosts)} hosts, {len(ips)} IPs")
 
@@ -101,16 +101,12 @@ def run_theharvester(session_manager):
         session_manager.update_result_pool("subdomains", hosts)
         session_manager.update_result_pool("ips", ips)
 
-        console.print(f"[green]Added {len(emails)} emails to session[/green]")
-        console.print(f"[green]Added {len(hosts)} subdomains to session[/green]")
-        console.print(f"[green]Added {len(ips)} IPs to session[/green]")
-        console.print(f"[green]Saved session file to: {session_manager.session_file}[/green]")
-
         session_manager.add_tool_run(
             tool_name="theHarvester",
             input_value=domain,
             output_file=os.path.basename(json_path),
             parsed_file=os.path.basename(json_path)
         )
+
     else:
-        console.print(f"[yellow]Warning: JSON output file not found at {json_path}[/yellow]")
+        console.print(f"[yellow]Warning: JSON output file not found for base path {output_base_path}[/yellow]")
