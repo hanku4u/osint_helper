@@ -88,6 +88,11 @@ def run_theharvester(session_manager):
 
         console.print(f"[cyan]Found:[/cyan] {len(emails)} emails, {len(hosts)} hosts, {len(ips)} IPs")
 
+        console.print(f"[blue]Parsed Emails:[/blue] {emails}")
+        console.print(f"[blue]Parsed Hosts:[/blue] {hosts}")
+        console.print(f"[blue]Parsed IPs:[/blue] {ips}")
+        print()
+
         session_manager.update_result_pool("emails", emails)
         session_manager.update_result_pool("subdomains", hosts)
         session_manager.update_result_pool("ips", ips)
