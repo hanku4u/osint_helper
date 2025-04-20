@@ -16,7 +16,7 @@ DEFAULT_START = 0
 
 # List of valid sources for theHarvester
 VALID_SOURCES = [
-    "anubis", "baidu", "bevigil", "binaryedge", "bing", "bingapi", "bufferoverun", "brave",
+    "all", "anubis", "baidu", "bevigil", "binaryedge", "bing", "bingapi", "bufferoverun", "brave",
     "censys", "certspotter", "criminalip", "crtsh", "dnsdumpster", "duckduckgo", "fullhunt",
     "github-code", "hackertarget", "hunter", "hunterhow", "intelx", "netlas", "onyphe", "otx",
     "pentesttools", "projectdiscovery", "rapiddns", "rocketreach", "securityTrails", "sitedossier",
