@@ -19,9 +19,9 @@ def run_shodan(session_manager):
 
     api = shodan.Shodan(api_key)
 
-    choice = Prompt.ask("Scan [ips] from previous tools or enter manually?", choices=["ips", "manual"], default="ips")
+    choice = Prompt.ask("Scan [IPs] from previous tools or enter manually?", choices=["IPs", "manual"], default="ips")
 
-    if choice == "ips":
+    if choice == "IPs":
         targets = select_from_result_pool(session_manager, "ips")
     else:
         ip = Prompt.ask("Enter a single IP address")

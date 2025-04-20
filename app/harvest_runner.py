@@ -14,6 +14,13 @@ DEFAULT_SOURCES = "all"
 DEFAULT_LIMIT = 100
 DEFAULT_START = 0
 
+# List of valid sources for theHarvester
+VALID_SOURCES = [
+    "baidu", "bing", "crtsh", "duckduckgo", "google", "hunter", "intelx",
+    "linkedin", "netcraft", "otx", "qwant", "rapiddns", "securityTrails",
+    "sublist3r", "threatcrowd", "trello", "twitter", "virustotal", "yahoo"
+]
+
 def run_theharvester(session_manager):
     console.print(Panel("🔍 [bold cyan]Run theHarvester[/bold cyan]", expand=False))
 
@@ -42,8 +49,20 @@ def run_theharvester(session_manager):
         start = DEFAULT_START
         verbose = False
     else:
-        console.print("\n[bold]Available Sources:[/bold] [dim]baidu, bing, crtsh, duckduckgo, google, hunter, intelx, linkedin, netcraft, otx, qwant, rapiddns, securityTrails, sublist3r, threatcrowd, trello, twitter, virustotal, yahoo, etc.[/dim]")
-        sources = Prompt.ask("Enter data sources (comma-separated)", default=DEFAULT_SOURCES)
+        console.print("\n[bold]Available Sources:[/bold] [dim]" + ", ".join(VALID_SOURCES) + "[/dim]")
+        
+        while True:
+            sources = Prompt.ask("Enter data sources (comma-separated)", default=DEFAULT_SOURCES)
+            selected_sources = [s.strip() for s in sources.split(",")]
+            
+            # Validate sources
+            invalid_sources = [s for s in selected_sources if s not in VALID_SOURCES]
+            if invalid_sources:
+                console.print(f"[bold red]Invalid sources:[/bold red] {', '.join(invalid_sources)}")
+                console.print("[yellow]Please enter valid sources from the list above.[/yellow]")
+            else:
+                break
+
         limit = IntPrompt.ask("Limit number of results", default=DEFAULT_LIMIT)
         start = IntPrompt.ask("Start from result number", default=DEFAULT_START)
         verbose = Prompt.ask("Verbose mode?", choices=["y", "n"], default="n").lower() == "y"
