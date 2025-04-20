@@ -17,7 +17,7 @@ DEFAULT_START = 0
 def run_theharvester(session_manager):
     console.print(Panel("🔍 [bold cyan]Run theHarvester[/bold cyan]", expand=False))
 
-    domain = Prompt.ask("Enter the domain to search")
+    domain = Prompt.ask("Enter the domain or IP to search")
 
     # Show the default values before asking
     console.print(Panel.fit(
@@ -48,9 +48,10 @@ def run_theharvester(session_manager):
         start = IntPrompt.ask("Start from result number", default=DEFAULT_START)
         verbose = Prompt.ask("Verbose mode?", choices=["y", "n"], default="n").lower() == "y"
 
-    # Prepare output path (no timestamp)
+    # Prepare output file path
     output_dir = session_manager.get_output_path_for_tool("theHarvester")
-    base_filename = f"theharvester_{domain}"
+    safe_name = domain.replace(".", "_")  # works for domains or IPs
+    base_filename = f"theharvester_{safe_name}"
     output_base_path = os.path.join(output_dir, base_filename)
     json_path = f"{output_base_path}.json"
 
