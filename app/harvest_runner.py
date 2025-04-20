@@ -53,9 +53,7 @@ def run_theharvester(session_manager):
     os.makedirs(output_dir, exist_ok=True)  # Ensure directory exists
 
     safe_name = domain.replace(".", "_")  # Safe for filename
-    base_filename = f"theharvester_{safe_name}"
-    output_base_path = os.path.join(output_dir, base_filename)
-    json_path = f"{output_base_path}.json"
+    json_path = os.path.join(output_dir, f"theharvester_{safe_name}.json")
 
     # Build theHarvester command
     cmd = [
@@ -64,7 +62,7 @@ def run_theharvester(session_manager):
         "-b", sources,
         "-l", str(limit),
         "-S", str(start),
-        "-f", output_base_path
+        "-f", json_path  # Specify the full path including .json
     ]
     if verbose:
         cmd.append("-v")
