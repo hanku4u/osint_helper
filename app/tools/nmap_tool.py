@@ -3,6 +3,7 @@
 import subprocess
 import os
 import re
+import signal
 from datetime import datetime
 from rich.console import Console
 from rich.prompt import Prompt
@@ -42,6 +43,12 @@ def display_port_summary(target, parsed_results):
     console.print(table)
 
 def run_nmap(session_manager):
+    def handle_abort(signum, frame):
+        console.print("\n[red]Scan aborted by user.[/red]")
+        raise KeyboardInterrupt
+
+    signal.signal(signal.SIGINT, handle_abort)
+
     choice = Prompt.ask("Scan [ips] or [subdomains]?", choices=["ips", "subdomains"], default="ips")
     targets = select_from_result_pool(session_manager, choice)
 
@@ -93,6 +100,9 @@ def run_nmap(session_manager):
                 parsed_file=None
             )
 
+        except KeyboardInterrupt:
+            console.print(f"[yellow]Scan for {target} was interrupted.[/yellow]")
+            break
         except subprocess.CalledProcessError as e:
             console.print(f"[red]Error running Nmap on {target}[/red]")
             with open(output_path, "w") as f:
