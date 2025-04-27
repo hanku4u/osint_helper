@@ -57,6 +57,26 @@ def initialize_database():
             )
         ''')
 
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS txt_records (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                domain TEXT,
+                name TEXT,
+                value TEXT
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS srv_records (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                domain TEXT,
+                name TEXT,
+                target TEXT,
+                port TEXT,
+                address TEXT
+            )
+        ''')
+
         conn.commit()
 
 # Insertion functions
@@ -105,3 +125,13 @@ def fetch_ips():
 def fetch_hosts():
     with get_connection() as conn:
         return conn.execute('SELECT host FROM hosts').fetchall()
+
+def insert_txt_record(domain, name, value):
+    with get_connection() as conn:
+        conn.execute('INSERT INTO txt_records (domain, name, value) VALUES (?, ?, ?)', (domain, name, value))
+        conn.commit()
+
+def insert_srv_record(domain, name, target, port, address):
+    with get_connection() as conn:
+        conn.execute('INSERT INTO srv_records (domain, name, target, port, address) VALUES (?, ?, ?, ?, ?)', (domain, name, target, port, address))
+        conn.commit()

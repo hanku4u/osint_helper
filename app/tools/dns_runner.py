@@ -3,24 +3,31 @@
 import subprocess
 import datetime
 import os
+import json
 from rich.console import Console
-from app.db.session_db import insert_domain, insert_ip
+from app.db.session_db import (
+    insert_domain,
+    insert_ip,
+    insert_txt_record,
+    insert_srv_record
+)
 
 console = Console()
 
 RESULTS_DIR = "results"
 
 def run_dnsrecon(domain: str, custom_args: str = "") -> str:
-    """Run dnsrecon on a domain, parse output, and store results."""
+    """Run dnsrecon on a domain, parse JSON output, and store results."""
     os.makedirs(RESULTS_DIR, exist_ok=True)
 
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_filename = f"dnsrecon_{domain}_{timestamp}.txt"
-    output_path = os.path.join(RESULTS_DIR, output_filename)
+    output_json_filename = f"dnsrecon_{domain}_{timestamp}.json"
+    output_json_path = os.path.join(RESULTS_DIR, output_json_filename)
 
-    # Build command
+    # Always add -j <output_file> to force JSON output
     base_args = [
-        "-d", domain
+        "-d", domain,
+        "-j", output_json_path
     ]
 
     user_args = custom_args.split() if custom_args else []
@@ -38,50 +45,58 @@ def run_dnsrecon(domain: str, custom_args: str = "") -> str:
                 text=True
             )
 
-        with open(output_path, "w") as output_file:
-            output_file.write(result.stdout)
-
         if result.returncode != 0:
             console.print(f"[red][!] dnsrecon returned an error (exit code {result.returncode}):[/red]")
             console.print(result.stdout)
             return ""
 
-        # ✅ After successful scan, parse output
-        parse_and_store_dnsrecon_output(output_path)
+        # ✅ Parse the JSON output now
+        parse_and_store_dnsrecon_json(output_json_path)
 
     except Exception as e:
         console.print(f"[red][!] Unexpected error running dnsrecon: {e}[/red]")
         return ""
 
-    return output_path
+    return output_json_path
 
-def parse_and_store_dnsrecon_output(filepath):
-    """Parse dnsrecon text output and insert found domains into the session database."""
+def parse_and_store_dnsrecon_json(filepath):
+    """Parse dnsrecon JSON output and insert found domains/IPs/TXT/SRV records into the session database."""
     try:
+        if not os.path.exists(filepath):
+            console.print(f"[red][!] JSON output file not found: {filepath}[/red]")
+            return
+
         with open(filepath, "r") as file:
-            lines = file.readlines()
+            data = json.load(file)
 
-        for line in lines:
-            line = line.strip()
-            if not line:
-                continue
+        for record in data:
+            record_type = record.get("type", "").upper()
 
-            # dnsrecon output usually contains discovered hosts like this:
-            # [+] Hostname found: www.example.com IP: 1.2.3.4
+            if record_type == "A":
+                domain = record.get("name")
+                ip = record.get("address")
+                if domain:
+                    insert_domain(domain)
+                if ip:
+                    insert_ip(ip)
 
-            if "Hostname found:" in line:
-                parts = line.split()
-                if "Hostname" in parts and "IP:" in parts:
-                    hostname_index = parts.index("Hostname") + 2  # Hostname is after "Hostname found:"
-                    ip_index = parts.index("IP:") + 1
+            elif record_type == "TXT":
+                domain = record.get("domain")
+                name = record.get("name")
+                value = record.get("strings")
+                if domain and name and value:
+                    insert_txt_record(domain, name, value)
 
-                    domain = parts[hostname_index].strip()
-                    ip = parts[ip_index].strip()
+            elif record_type == "SRV":
+                domain = record.get("domain")
+                name = record.get("name")
+                target = record.get("target")
+                port = record.get("port")
+                address = record.get("address")
+                if domain and name and target and port:
+                    insert_srv_record(domain, name, target, port, address)
 
-                    if domain:
-                        insert_domain(domain)
-                    if ip:
-                        insert_ip(ip)
+            # (Optional) Handle other types (NS, MX, etc.) later if needed
 
     except Exception as e:
-        console.print(f"[red][!] Failed to parse dnsrecon output: {e}[/red]")
+        console.print(f"[red][!] Failed to parse dnsrecon JSON output: {e}[/red]")
