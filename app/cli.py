@@ -87,6 +87,52 @@ def run_sql_query(sql: str):
     except Exception as e:
         console.print(f"[red][!] Unexpected error running query: {e}[/red]")
 
+def sqlite_shell():
+    """Drop into an interactive SQLite shell on the current session DB."""
+    console.print("\n[bold cyan]Entering SQLite Session Shell[/bold cyan]")
+    console.print("[yellow]Type your SQL queries below.[/yellow]")
+    console.print("[yellow]Type '.exit' to return to the main menu.[/yellow]\n")
+
+    try:
+        with get_connection() as conn:
+            cursor = conn.cursor()
+
+            while True:
+                query = Prompt.ask("[bold green]sqlite>[/bold green]")
+
+                if query.strip() in [".exit", ".quit"]:
+                    console.print("[yellow]Exiting SQLite shell...[/yellow]\n")
+                    break
+
+                try:
+                    cursor.execute(query)
+                    if query.strip().lower().startswith("select"):
+                        rows = cursor.fetchall()
+                        columns = [description[0] for description in cursor.description]
+
+                        if not rows:
+                            console.print("[yellow]No results found.[/yellow]")
+                            continue
+
+                        table = Table(title="Query Results", show_lines=True)
+                        for column in columns:
+                            table.add_column(column, style="cyan")
+
+                        for row in rows:
+                            table.add_row(*[str(item) if item is not None else "" for item in row])
+
+                        console.print(table)
+
+                    else:
+                        conn.commit()
+                        console.print("[green]Query executed successfully.[/green]")
+
+                except sqlite3.Error as e:
+                    console.print(f"[red][!] SQL Error: {e}[/red]")
+
+    except Exception as e:
+        console.print(f"[red][!] Unexpected error: {e}[/red]")
+
 def review_session_data_menu():
     """Show the dynamic session data review menu with record counts."""
     while True:
@@ -122,11 +168,12 @@ def main_menu():
         console.print("[1] Run theHarvester")
         console.print("[2] Run DNS Enumeration (dnsrecon)")
         console.print("[3] Run WHOIS Enumeration")
-        console.print("[4] Run Nmap Scan")      # 👈 ADD THIS
+        console.print("[4] Run Nmap Scan")
         console.print("[5] Review Current Session Data")
-        console.print("[6] Exit")
+        console.print("[6] Explore Session Data (Advanced)")
+        console.print("[7] Exit")
 
-        choice = Prompt.ask("\nEnter your choice", choices=["1", "2", "3", "4", "5", "6"])
+        choice = Prompt.ask("\nEnter your choice", choices=["1", "2", "3", "4", "5", "6", "7"])
 
         if choice == "1":
             domain = Prompt.ask("Enter the domain or IP to scan with theHarvester")
@@ -185,5 +232,8 @@ def main_menu():
             review_session_data_menu()
 
         elif choice == "6":
+            sqlite_shell()
+
+        elif choice == "7":
             console.print("[yellow]Exiting...[/yellow]")
             break
