@@ -148,6 +148,43 @@ def initialize_database():
             )
         ''')
 
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS enumerated_nmap_ips (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ip TEXT,
+                port TEXT,
+                protocol TEXT,
+                service TEXT,
+                version TEXT,
+                raw_text TEXT
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS enumerated_nmap_hosts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                host TEXT,
+                port TEXT,
+                protocol TEXT,
+                service TEXT,
+                version TEXT,
+                raw_text TEXT
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS user_nmap_queries (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                query TEXT,
+                port TEXT,
+                protocol TEXT,
+                service TEXT,
+                version TEXT,
+                raw_text TEXT
+            )
+        ''')
+
+
         conn.commit()
 
 # --- Insert Functions for theHarvester ---
@@ -232,6 +269,30 @@ def insert_user_whois_query(query, registrar, creation_date, expiration_date, na
         ''', (query, registrar, creation_date, expiration_date, name_servers, raw_text))
         conn.commit()
 
+def insert_enumerated_nmap_ip(ip, port, protocol, service, version, raw_text):
+    with get_connection() as conn:
+        conn.execute('''
+            INSERT INTO enumerated_nmap_ips (ip, port, protocol, service, version, raw_text)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (ip, port, protocol, service, version, raw_text))
+        conn.commit()
+
+def insert_enumerated_nmap_host(host, port, protocol, service, version, raw_text):
+    with get_connection() as conn:
+        conn.execute('''
+            INSERT INTO enumerated_nmap_hosts (host, port, protocol, service, version, raw_text)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (host, port, protocol, service, version, raw_text))
+        conn.commit()
+
+def insert_user_nmap_query(query, port, protocol, service, version, raw_text):
+    with get_connection() as conn:
+        conn.execute('''
+            INSERT INTO user_nmap_queries (query, port, protocol, service, version, raw_text)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (query, port, protocol, service, version, raw_text))
+        conn.commit()
+
 # --- Helper Fetch Functions for WHOIS enumeration ---
 def get_all_ips():
     with get_connection() as conn:
@@ -240,3 +301,9 @@ def get_all_ips():
 def get_all_domains():
     with get_connection() as conn:
         return conn.execute('SELECT domain FROM domains').fetchall()
+    
+def get_all_hosts():
+    with get_connection() as conn:
+        return conn.execute('SELECT host FROM hosts').fetchall()
+
+
