@@ -94,23 +94,36 @@ def parse_and_store_harvester_output(filepath):
         email_pattern = re.compile(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+")
         ip_pattern = re.compile(r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b")
 
+        in_hosts_section = False
+
         for line in lines:
             line = line.strip()
 
-            # Match emails
+            if not line:
+                continue  # skip blank lines
+
+            # Detect start of hosts section
+            if "[*] Hosts found:" in line:
+                in_hosts_section = True
+                continue
+
+            # If we're in the hosts section
+            if in_hosts_section:
+                # If line doesn't look like a host, exit hosts section
+                if not ("." in line and not line.startswith("http")):
+                    in_hosts_section = False
+                    continue
+                # Save host
+                insert_harvester_result("host", line.strip(), "theHarvester")
+                continue
+
+            # Outside hosts section: parse emails
             for match in email_pattern.findall(line):
                 insert_harvester_result("email", match, "theHarvester")
 
-            # Match IP addresses
+            # Outside hosts section: parse IPs
             for match in ip_pattern.findall(line):
                 insert_harvester_result("ip", match, "theHarvester")
-
-            # Match hostnames/domains (a very basic heuristic)
-            if "Host:" in line or "Domain:" in line:
-                parts = line.split()
-                for part in parts:
-                    if "." in part and not part.startswith("http"):
-                        insert_harvester_result("host", part.strip(), "theHarvester")
 
     except Exception as e:
         console.print(f"[red][!] Failed to parse harvester output: {e}[/red]")
