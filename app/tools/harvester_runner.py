@@ -18,6 +18,7 @@ def run_theharvester(domain: str, custom_args: str = "") -> str:
         "theHarvester",
         "-d", domain,
         "-b", "all",
+        "-l", "100",
     ]
 
     if custom_args:
