@@ -94,34 +94,43 @@ def parse_and_store_harvester_output(filepath):
         email_pattern = re.compile(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+")
         ip_pattern = re.compile(r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b")
 
+        parsing_active = False
         in_hosts_section = False
 
         for line in lines:
             line = line.strip()
 
+            # Skip blank lines
             if not line:
-                continue  # skip blank lines
+                continue
+
+            # Detect end of header
+            if not parsing_active:
+                if line.startswith("[*] Target:"):
+                    parsing_active = True
+                continue
+
+            # --- Now we are parsing real scan results ---
 
             # Detect start of hosts section
-            if "[*] Hosts found:" in line:
+            if "Hosts found" in line:
                 in_hosts_section = True
                 continue
 
-            # If we're in the hosts section
+            # Parse hosts
             if in_hosts_section:
-                # If line doesn't look like a host, exit hosts section
+                # End hosts section if line doesn't look like a host
                 if not ("." in line and not line.startswith("http")):
                     in_hosts_section = False
                     continue
-                # Save host
                 insert_harvester_result("host", line.strip(), "theHarvester")
                 continue
 
-            # Outside hosts section: parse emails
+            # Parse emails
             for match in email_pattern.findall(line):
                 insert_harvester_result("email", match, "theHarvester")
 
-            # Outside hosts section: parse IPs
+            # Parse IP addresses
             for match in ip_pattern.findall(line):
                 insert_harvester_result("ip", match, "theHarvester")
 
