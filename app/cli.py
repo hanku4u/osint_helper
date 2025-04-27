@@ -2,6 +2,7 @@ from rich.console import Console
 from rich.prompt import Prompt
 from rich.table import Table
 from app.tools.harvester_runner import run_theharvester
+from app.tools.dns_runner import run_dnsrecon
 from app.db.session_db import fetch_targets, fetch_domains, fetch_emails, fetch_ips, fetch_hosts
 
 console = Console()
@@ -10,13 +11,14 @@ def main_menu():
     while True:
         console.print("\n[bold cyan]OSINT CLI Toolkit[/bold cyan]")
         console.print("[1] Run theHarvester")
-        console.print("[2] Review Current Session Data")
-        console.print("[3] Exit")
+        console.print("[2] Run DNS Enumeration")
+        console.print("[3] Review Current Session Data")
+        console.print("[4] Exit")
 
-        choice = Prompt.ask("\nEnter your choice", choices=["1", "2", "3"])
+        choice = Prompt.ask("\nEnter your choice", choices=["1", "2", "3", "4"])
 
         if choice == "1":
-            domain = Prompt.ask("Enter the domain or IP to scan")
+            domain = Prompt.ask("Enter the domain or IP to scan with theHarvester")
             
             console.print("\n[bold green]Default Arguments:[/bold green]")
             console.print(f"-d {domain} -b all -l 100")
@@ -40,6 +42,29 @@ def main_menu():
                 console.print("[red]Scan failed.[/red]")
 
         elif choice == "2":
+            domain = Prompt.ask("Enter the domain to scan with dnsrecon")
+            
+            console.print("\n[bold green]Default Arguments:[/bold green]")
+            console.print(f"-d {domain}")
+
+            console.print("\n[bold cyan]Available Additional Arguments:[/bold cyan]")
+            console.print("""
+-t standard          : Perform a standard DNS enumeration
+-t axfr              : Attempt DNS zone transfer
+-t brt               : Perform a DNS brute-force
+--xml <filename>     : Output results to an XML file
+-h                   : Show help message
+""")
+
+            custom_args = Prompt.ask("\nEnter any additional arguments you want to use (or leave blank)", default="")
+            output_path = run_dnsrecon(domain, custom_args)
+            
+            if output_path:
+                console.print(f"[green]Scan completed! Output saved to {output_path}[/green]")
+            else:
+                console.print("[red]Scan failed.[/red]")
+
+        elif choice == "3":
             console.print("\n[bold cyan]Current Session Data:[/bold cyan]")
 
             # Targets
@@ -76,7 +101,7 @@ def main_menu():
                     table.add_row(host[0])
                 console.print(table)
 
-            # Domains (optional if you add domain parsing later)
+            # Domains
             domains = fetch_domains()
             if domains:
                 table = Table(title="Domains", show_lines=True)
@@ -85,6 +110,6 @@ def main_menu():
                     table.add_row(domain[0])
                 console.print(table)
 
-        elif choice == "3":
+        elif choice == "4":
             console.print("[yellow]Exiting...[/yellow]")
             break
