@@ -63,9 +63,10 @@ def run_and_store_nmap(target: str, record_type: str):
 
     # Default arguments: service/version detection, top 10 ports
     command = ["nmap", "-sV", "--top-ports", "10", target]
+    full_command_str = " ".join(command)
 
     try:
-        with console.status(f"[bold green]Running: nmap {target}[/bold green]", spinner="dots"):
+        with console.status(f"[bold green]Running: {full_command_str}[/bold green]", spinner="dots"):
             result = subprocess.run(
                 command,
                 stdout=subprocess.PIPE,
