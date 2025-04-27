@@ -20,6 +20,7 @@ def select_or_create_session():
         set_db_path()  # Create a fresh session
         initialize_database()
         console.print("[green]New session started.[/green]")
+        
     elif choice == "2":
         db_files = [f for f in os.listdir("sessions") if f.endswith(".db")]
         if not db_files:

@@ -2,7 +2,7 @@ from rich.console import Console
 from rich.prompt import Prompt
 from rich.table import Table
 from app.tools.harvester_runner import run_theharvester
-from app.db.session_db import fetch_all_harvester_results
+from app.db.session_db import fetch_targets, fetch_domains, fetch_emails, fetch_ips, fetch_hosts
 
 console = Console()
 
@@ -40,20 +40,50 @@ def main_menu():
                 console.print("[red]Scan failed.[/red]")
 
         elif choice == "2":
-            # Review current session results
-            results = fetch_all_harvester_results()
+            console.print("\n[bold cyan]Current Session Data:[/bold cyan]")
 
-            if not results:
-                console.print("[yellow]No results found yet.[/yellow]")
-            else:
-                table = Table(title="Current Session Harvester Results")
-                table.add_column("Type", style="cyan")
-                table.add_column("Value", style="white")
-                table.add_column("Source", style="magenta")
+            # Targets
+            targets = fetch_targets()
+            if targets:
+                console.print("\n[bold green]Targets:[/bold green]")
+                for target in targets:
+                    console.print(f"- {target[0]}")
 
-                for rtype, value, source in results:
-                    table.add_row(rtype, value, source)
+            # Emails
+            emails = fetch_emails()
+            if emails:
+                from rich.table import Table
+                table = Table(title="Emails", show_lines=True)
+                table.add_column("Email", style="cyan")
+                for email in emails:
+                    table.add_row(email[0])
+                console.print(table)
 
+            # IPs
+            ips = fetch_ips()
+            if ips:
+                table = Table(title="IP Addresses", show_lines=True)
+                table.add_column("IP Address", style="yellow")
+                for ip in ips:
+                    table.add_row(ip[0])
+                console.print(table)
+
+            # Hosts
+            hosts = fetch_hosts()
+            if hosts:
+                table = Table(title="Hosts", show_lines=True)
+                table.add_column("Host", style="green")
+                for host in hosts:
+                    table.add_row(host[0])
+                console.print(table)
+
+            # Domains (optional if you add domain parsing later)
+            domains = fetch_domains()
+            if domains:
+                table = Table(title="Domains", show_lines=True)
+                table.add_column("Domain", style="magenta")
+                for domain in domains:
+                    table.add_row(domain[0])
                 console.print(table)
 
         elif choice == "3":
