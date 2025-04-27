@@ -88,45 +88,18 @@ def run_and_store_nmap(target: str, record_type: str):
         console.print(f"[red][!] Unexpected error running nmap: {e}[/red]")
 
 def parse_and_store_nmap_output(target: str, filepath: str, record_type: str):
-    """Parse Nmap output and insert structured data into the session DB."""
+    """Simply store the raw Nmap output."""
     try:
-        ports_info = []
-        raw_text = ""
-
         with open(filepath, "r") as f:
-            lines = f.readlines()
-            raw_text = "".join(lines)
+            raw_text = f.read()
 
-        parsing_ports = False
-
-        for line in lines:
-            line = line.strip()
-
-            if line.startswith("PORT"):
-                parsing_ports = True
-                continue
-
-            if parsing_ports:
-                if line == "" or "Nmap done" in line:
-                    break
-
-                parts = line.split()
-                if len(parts) >= 3:
-                    port_protocol = parts[0]  # like "22/tcp"
-                    service = parts[2]
-                    version = " ".join(parts[3:]) if len(parts) > 3 else ""
-
-                    port, protocol = port_protocol.split("/")
-
-                    ports_info.append((port, protocol, service, version))
-
-        for (port, protocol, service, version) in ports_info:
-            if record_type == "ip":
-                insert_enumerated_nmap_ip(target, port, protocol, service, version, raw_text)
-            elif record_type == "host":
-                insert_enumerated_nmap_host(target, port, protocol, service, version, raw_text)
-            elif record_type == "custom":
-                insert_user_nmap_query(target, port, protocol, service, version, raw_text)
+        if record_type == "ip":
+            insert_enumerated_nmap_ip(raw_text)
+        elif record_type == "host":
+            insert_enumerated_nmap_host(raw_text)
+        elif record_type == "custom":
+            insert_user_nmap_query(raw_text)
 
     except Exception as e:
-        console.print(f"[red][!] Failed to parse Nmap output: {e}[/red]")
+        console.print(f"[red][!] Failed to store Nmap output: {e}[/red]")
+

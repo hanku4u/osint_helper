@@ -30,6 +30,9 @@ TABLES_TO_DISPLAY = [
     ("enumerated_ips", "WHOIS - Enumerated IPs"),
     ("enumerated_domains", "WHOIS - Enumerated Domains"),
     ("user_whois_queries", "WHOIS - Custom Queries"),
+    ("enumerated_nmap_ips", "Nmap - Scanned IPs"),
+    ("enumerated_nmap_hosts", "Nmap - Scanned Hosts"),
+    ("user_nmap_queries", "Nmap - Custom Queries"),
 ]
 
 def get_table_count(table_name):
