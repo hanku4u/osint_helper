@@ -42,3 +42,22 @@ def main_menu():
         elif choice == "2":
             console.print("[yellow]Exiting...[/yellow]")
             break
+
+        if choice == "3":
+            from app.db.session_db import fetch_all_harvester_results
+            results = fetch_all_harvester_results()
+
+            if not results:
+                console.print("[yellow]No results to display yet.[/yellow]")
+            else:
+                from rich.table import Table
+                table = Table(title="Harvester Results")
+                table.add_column("Type")
+                table.add_column("Value")
+                table.add_column("Source")
+
+                for rtype, value, source in results:
+                    table.add_row(rtype, value, source)
+
+                console.print(table)
+
