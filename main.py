@@ -40,5 +40,5 @@ def select_or_create_session():
 
 if __name__ == "__main__":
     environment_check()
-    select_or_create_session
+    select_or_create_session()
     main_menu()
