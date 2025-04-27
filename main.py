@@ -23,7 +23,9 @@ class OSINTApp(App):
             custom_args = input("Enter any custom theHarvester arguments (or leave blank): ")
             return domain, custom_args
 
-        domain, custom_args = await self.run_worker(get_inputs)
+        worker = self.run_worker(get_inputs, exclusive=True)
+        await worker.finished
+        domain, custom_args = worker.result
 
         if not domain:
             self.console.log("[!] No domain entered. Returning to menu.")
