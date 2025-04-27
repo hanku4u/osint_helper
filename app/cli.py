@@ -52,7 +52,6 @@ def main_menu():
             # Emails
             emails = fetch_emails()
             if emails:
-                from rich.table import Table
                 table = Table(title="Emails", show_lines=True)
                 table.add_column("Email", style="cyan")
                 for email in emails:
