@@ -6,10 +6,13 @@ import os
 import json
 from rich.console import Console
 from app.db.session_db import (
-    insert_domain,
     insert_ip,
+    insert_a_record,
+    insert_ns_record,
+    insert_mx_record,
     insert_txt_record,
-    insert_srv_record
+    insert_srv_record,
+    insert_soa_record
 )
 
 console = Console()
@@ -60,7 +63,7 @@ def run_dnsrecon(domain: str, custom_args: str = "") -> str:
     return output_json_path
 
 def parse_and_store_dnsrecon_json(filepath):
-    """Parse dnsrecon JSON output and insert found domains/IPs/TXT/SRV records into the session database."""
+    """Parse dnsrecon JSON output and insert all record types into session database."""
     try:
         if not os.path.exists(filepath):
             console.print(f"[red][!] JSON output file not found: {filepath}[/red]")
@@ -70,33 +73,62 @@ def parse_and_store_dnsrecon_json(filepath):
             data = json.load(file)
 
         for record in data:
+            # Ignore scan metadata
+            if record.get("type", "").lower() == "scaninfo":
+                continue
+
             record_type = record.get("type", "").upper()
 
             if record_type == "A":
-                domain = record.get("name")
-                ip = record.get("address")
-                if domain:
-                    insert_domain(domain)
-                if ip:
-                    insert_ip(ip)
+                insert_a_record(
+                    record.get("name"),
+                    record.get("domain"),
+                    record.get("address")
+                )
+
+            elif record_type == "NS":
+                insert_ns_record(
+                    record.get("domain"),
+                    record.get("target"),
+                    record.get("address"),
+                    record.get("recursive"),
+                    record.get("Version")
+                )
+
+            elif record_type == "MX":
+                insert_mx_record(
+                    record.get("domain"),
+                    record.get("exchange"),
+                    record.get("address")
+                )
 
             elif record_type == "TXT":
-                domain = record.get("domain")
-                name = record.get("name")
-                value = record.get("strings")
-                if domain and name and value:
-                    insert_txt_record(domain, name, value)
+                insert_txt_record(
+                    record.get("domain"),
+                    record.get("name"),
+                    record.get("strings")
+                )
 
             elif record_type == "SRV":
-                domain = record.get("domain")
-                name = record.get("name")
-                target = record.get("target")
-                port = record.get("port")
-                address = record.get("address")
-                if domain and name and target and port:
-                    insert_srv_record(domain, name, target, port, address)
+                insert_srv_record(
+                    record.get("domain"),
+                    record.get("name"),
+                    record.get("target"),
+                    record.get("port"),
+                    record.get("address")
+                )
 
-            # (Optional) Handle other types (NS, MX, etc.) later if needed
+            elif record_type == "SOA":
+                insert_soa_record(
+                    record.get("domain"),
+                    record.get("mname"),
+                    record.get("address")
+                )
+
+            # ✅ Insert into ips table if address exists (even if record type is not "A")
+            address = record.get("address")
+            if address:
+                insert_ip(address)
 
     except Exception as e:
         console.print(f"[red][!] Failed to parse dnsrecon JSON output: {e}[/red]")

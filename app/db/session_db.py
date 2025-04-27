@@ -25,7 +25,8 @@ def initialize_database():
     with get_connection() as conn:
         cursor = conn.cursor()
 
-        # Create tables
+        # --- Tables for theHarvester ---
+
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS targets (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -57,6 +58,37 @@ def initialize_database():
             )
         ''')
 
+        # --- New Tables for DNS records (dnsrecon) ---
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS a_records (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT,
+                domain TEXT,
+                address TEXT
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS ns_records (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                domain TEXT,
+                target TEXT,
+                address TEXT,
+                recursive TEXT,
+                version TEXT
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS mx_records (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                domain TEXT,
+                exchange TEXT,
+                address TEXT
+            )
+        ''')
+
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS txt_records (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -77,9 +109,20 @@ def initialize_database():
             )
         ''')
 
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS soa_records (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                domain TEXT,
+                mname TEXT,
+                address TEXT
+            )
+        ''')
+
         conn.commit()
 
-# Insertion functions
+# --- Insert Functions ---
+
+# For theHarvester results
 def insert_target(target):
     with get_connection() as conn:
         conn.execute('INSERT INTO targets (target) VALUES (?)', (target,))
@@ -105,6 +148,22 @@ def insert_host(host):
         conn.execute('INSERT INTO hosts (host) VALUES (?)', (host,))
         conn.commit()
 
+# For dnsrecon results
+def insert_a_record(name, domain, address):
+    with get_connection() as conn:
+        conn.execute('INSERT INTO a_records (name, domain, address) VALUES (?, ?, ?)', (name, domain, address))
+        conn.commit()
+
+def insert_ns_record(domain, target, address, recursive, version):
+    with get_connection() as conn:
+        conn.execute('INSERT INTO ns_records (domain, target, address, recursive, version) VALUES (?, ?, ?, ?, ?)', (domain, target, address, recursive, version))
+        conn.commit()
+
+def insert_mx_record(domain, exchange, address):
+    with get_connection() as conn:
+        conn.execute('INSERT INTO mx_records (domain, exchange, address) VALUES (?, ?, ?)', (domain, exchange, address))
+        conn.commit()
+
 def insert_txt_record(domain, name, value):
     with get_connection() as conn:
         conn.execute('INSERT INTO txt_records (domain, name, value) VALUES (?, ?, ?)', (domain, name, value))
@@ -113,4 +172,9 @@ def insert_txt_record(domain, name, value):
 def insert_srv_record(domain, name, target, port, address):
     with get_connection() as conn:
         conn.execute('INSERT INTO srv_records (domain, name, target, port, address) VALUES (?, ?, ?, ?, ?)', (domain, name, target, port, address))
+        conn.commit()
+
+def insert_soa_record(domain, mname, address):
+    with get_connection() as conn:
+        conn.execute('INSERT INTO soa_records (domain, mname, address) VALUES (?, ?, ?)', (domain, mname, address))
         conn.commit()
