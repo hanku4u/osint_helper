@@ -1,3 +1,5 @@
+# app/db/session_db.py
+
 import sqlite3
 import os
 import datetime
@@ -26,7 +28,6 @@ def initialize_database():
         cursor = conn.cursor()
 
         # --- Tables for theHarvester ---
-
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS targets (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -58,8 +59,7 @@ def initialize_database():
             )
         ''')
 
-        # --- New Tables for DNS records (dnsrecon) ---
-
+        # --- Tables for dnsrecon ---
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS a_records (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -68,7 +68,6 @@ def initialize_database():
                 address TEXT
             )
         ''')
-
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS ns_records (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -79,7 +78,6 @@ def initialize_database():
                 version TEXT
             )
         ''')
-
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS mx_records (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -88,7 +86,6 @@ def initialize_database():
                 address TEXT
             )
         ''')
-
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS txt_records (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -97,7 +94,6 @@ def initialize_database():
                 value TEXT
             )
         ''')
-
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS srv_records (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -108,7 +104,6 @@ def initialize_database():
                 address TEXT
             )
         ''')
-
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS soa_records (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -118,11 +113,44 @@ def initialize_database():
             )
         ''')
 
+        # --- Tables for WHOIS enumeration ---
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS enumerated_ips (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ip TEXT,
+                registrar TEXT,
+                creation_date TEXT,
+                expiration_date TEXT,
+                name_servers TEXT,
+                raw_text TEXT
+            )
+        ''')
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS enumerated_domains (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                domain TEXT,
+                registrar TEXT,
+                creation_date TEXT,
+                expiration_date TEXT,
+                name_servers TEXT,
+                raw_text TEXT
+            )
+        ''')
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS user_whois_queries (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                query TEXT,
+                registrar TEXT,
+                creation_date TEXT,
+                expiration_date TEXT,
+                name_servers TEXT,
+                raw_text TEXT
+            )
+        ''')
+
         conn.commit()
 
-# --- Insert Functions ---
-
-# For theHarvester results
+# --- Insert Functions for theHarvester ---
 def insert_target(target):
     with get_connection() as conn:
         conn.execute('INSERT INTO targets (target) VALUES (?)', (target,))
@@ -148,7 +176,7 @@ def insert_host(host):
         conn.execute('INSERT INTO hosts (host) VALUES (?)', (host,))
         conn.commit()
 
-# For dnsrecon results
+# --- Insert Functions for dnsrecon ---
 def insert_a_record(name, domain, address):
     with get_connection() as conn:
         conn.execute('INSERT INTO a_records (name, domain, address) VALUES (?, ?, ?)', (name, domain, address))
@@ -178,3 +206,37 @@ def insert_soa_record(domain, mname, address):
     with get_connection() as conn:
         conn.execute('INSERT INTO soa_records (domain, mname, address) VALUES (?, ?, ?)', (domain, mname, address))
         conn.commit()
+
+# --- Insert Functions for WHOIS ---
+def insert_enumerated_ip(ip, registrar, creation_date, expiration_date, name_servers, raw_text):
+    with get_connection() as conn:
+        conn.execute('''
+            INSERT INTO enumerated_ips (ip, registrar, creation_date, expiration_date, name_servers, raw_text)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (ip, registrar, creation_date, expiration_date, name_servers, raw_text))
+        conn.commit()
+
+def insert_enumerated_domain(domain, registrar, creation_date, expiration_date, name_servers, raw_text):
+    with get_connection() as conn:
+        conn.execute('''
+            INSERT INTO enumerated_domains (domain, registrar, creation_date, expiration_date, name_servers, raw_text)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (domain, registrar, creation_date, expiration_date, name_servers, raw_text))
+        conn.commit()
+
+def insert_user_whois_query(query, registrar, creation_date, expiration_date, name_servers, raw_text):
+    with get_connection() as conn:
+        conn.execute('''
+            INSERT INTO user_whois_queries (query, registrar, creation_date, expiration_date, name_servers, raw_text)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (query, registrar, creation_date, expiration_date, name_servers, raw_text))
+        conn.commit()
+
+# --- Helper Fetch Functions for WHOIS enumeration ---
+def get_all_ips():
+    with get_connection() as conn:
+        return conn.execute('SELECT ip FROM ips').fetchall()
+
+def get_all_domains():
+    with get_connection() as conn:
+        return conn.execute('SELECT domain FROM domains').fetchall()

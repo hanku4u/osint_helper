@@ -8,6 +8,7 @@ import os
 
 from app.tools.harvester_runner import run_theharvester
 from app.tools.dns_runner import run_dnsrecon
+from app.tools.whois_runner import run_whois_menu
 from app.db.session_db import get_connection
 
 console = Console()
@@ -25,6 +26,9 @@ TABLES_TO_DISPLAY = [
     ("txt_records", "TXT Records"),
     ("srv_records", "SRV Records"),
     ("soa_records", "SOA Records"),
+    ("enumerated_ips", "WHOIS - Enumerated IPs"),
+    ("enumerated_domains", "WHOIS - Enumerated Domains"),
+    ("user_whois_queries", "WHOIS - Custom Queries"),
 ]
 
 def get_table_count(table_name):
@@ -113,10 +117,11 @@ def main_menu():
         console.print("\n[bold cyan]OSINT CLI Toolkit[/bold cyan]")
         console.print("[1] Run theHarvester")
         console.print("[2] Run DNS Enumeration (dnsrecon)")
-        console.print("[3] Review Current Session Data")
-        console.print("[4] Exit")
+        console.print("[3] Run WHOIS Enumeration")
+        console.print("[4] Review Current Session Data")
+        console.print("[5] Exit")
 
-        choice = Prompt.ask("\nEnter your choice", choices=["1", "2", "3", "4"])
+        choice = Prompt.ask("\nEnter your choice", choices=["1", "2", "3", "4", "5"])
 
         if choice == "1":
             domain = Prompt.ask("Enter the domain or IP to scan with theHarvester")
@@ -166,8 +171,11 @@ def main_menu():
                 console.print("[red]Scan failed.[/red]")
 
         elif choice == "3":
-            review_session_data_menu()
+            run_whois_menu()
 
         elif choice == "4":
+            review_session_data_menu()
+
+        elif choice == "5":
             console.print("[yellow]Exiting...[/yellow]")
             break
