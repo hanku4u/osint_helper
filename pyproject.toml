@@ -7,5 +7,4 @@ requires-python = ">=3.11"
 dependencies = [
     "rich>=14.0.0",
     "sqlite-utils>=3.38",
-    "textual>=3.1.1",
 ]

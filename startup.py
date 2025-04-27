@@ -4,7 +4,7 @@ import importlib.util
 import os
 
 REQUIRED_PYTHON = (3, 11)
-REQUIRED_PACKAGES = ["textual", "rich"]
+REQUIRED_PACKAGES = ["rich"]
 
 def check_python_version():
     if sys.version_info < REQUIRED_PYTHON:
