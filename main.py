@@ -24,7 +24,7 @@ class OSINTApp(App):
             return domain, custom_args
 
         worker = self.run_worker(get_inputs, exclusive=True)
-        await worker.finished
+        await worker.wait()
         domain, custom_args = worker.result
 
         if not domain:
