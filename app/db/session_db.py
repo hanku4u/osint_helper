@@ -105,27 +105,6 @@ def insert_host(host):
         conn.execute('INSERT INTO hosts (host) VALUES (?)', (host,))
         conn.commit()
 
-# Fetching functions
-def fetch_targets():
-    with get_connection() as conn:
-        return conn.execute('SELECT target FROM targets').fetchall()
-
-def fetch_domains():
-    with get_connection() as conn:
-        return conn.execute('SELECT domain FROM domains').fetchall()
-
-def fetch_emails():
-    with get_connection() as conn:
-        return conn.execute('SELECT email FROM emails').fetchall()
-
-def fetch_ips():
-    with get_connection() as conn:
-        return conn.execute('SELECT ip FROM ips').fetchall()
-
-def fetch_hosts():
-    with get_connection() as conn:
-        return conn.execute('SELECT host FROM hosts').fetchall()
-
 def insert_txt_record(domain, name, value):
     with get_connection() as conn:
         conn.execute('INSERT INTO txt_records (domain, name, value) VALUES (?, ?, ?)', (domain, name, value))
