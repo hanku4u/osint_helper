@@ -1,46 +1,47 @@
-from textual.app import App
-from textual.widgets import Button, Header, Footer, Static
+# main.py
 
+from startup import environment_check
+from textual.app import App, ComposeResult
+from textual.widgets import Static, Button
+from app.ui.menu import MainMenu 
 from app.tools.harvester_runner import run_theharvester
-from app.tools.dns_runner import run_dnsrecon
-from app.tools.whois_runner import run_whois
-from app.tools.nmap_runner import run_nmap
-from app.reporting.report_generator import generate_report
-from app.ui.session_view import SessionReview
-from app.utils.db import fetch_data
 
-class MainMenu(App):
-    def compose(self):
-        yield Header()
-        yield Static("OSINT CLI Toolkit", id="title")
-        yield Button("Run theHarvester", id="harvester")
-        yield Button("Run DNS Enumeration", id="dns")
-        yield Button("Run WHOIS Lookup", id="whois")
-        yield Button("Run Nmap Scan", id="nmap")
-        yield Button("Review Current Session Data", id="review")
-        yield Button("Export Report", id="export")
-        yield Button("Exit", id="exit")
-        yield Footer()
+class OSINTApp(App):
+    """Main application for the OSINT CLI Toolkit."""
 
-    def on_button_pressed(self, event):
+    CSS_PATH = None  # We'll add styling later
+
+    def compose(self) -> ComposeResult:
+        yield MainMenu()
+
+    async def run_theharvester_flow(self):
+        """Prompt for domain and custom args, then run theHarvester."""
+        self.console.log("[*] Starting theHarvester scan...")
+
+        domain = await self.prompt("Enter the domain or IP to scan with theHarvester:")
+        if not domain:
+            self.console.log("[!] No domain entered. Returning to menu.")
+            return
+
+        custom_args = await self.prompt("Enter any custom theHarvester arguments (or leave blank):")
+
+        self.console.log(f"[*] Running theHarvester on {domain}...")
+        output_path = run_theharvester(domain, custom_args)
+
+        if output_path:
+            self.console.log(f"[+] theHarvester output saved to {output_path}")
+        else:
+            self.console.log("[!] theHarvester scan failed.")
+
+    async def on_button_pressed(self, event: Button.Pressed) -> None:
         button_id = event.button.id
         if button_id == "exit":
             self.exit()
         elif button_id == "harvester":
-            run_theharvester("example.com")  # Replace with dynamic domain input
-        elif button_id == "dns":
-            run_dnsrecon("example.com")  # Replace with dynamic domain input
-        elif button_id == "whois":
-            run_whois("example.com")  # Replace with dynamic domain input
-        elif button_id == "nmap":
-            run_nmap("example.com")  # Replace with dynamic domain input
-        elif button_id == "review":
-            if not any(fetch_data(table) for table in ["emails", "domains", "subdomains", "ips", "dns_records", "whois_data", "nmap_results"]):
-                self.mount(Static("No session data available."))
-            else:
-                self.mount(SessionReview())  # Open session review panel
-        elif button_id == "export":
-            generate_report()
+            await self.run_theharvester_flow()
+        else:
+            self.console.log(f"You selected: {button_id} (Feature coming soon!)")
 
 if __name__ == "__main__":
-    MainMenu().run()
+    environment_check()  # Check environment before running app
+    OSINTApp().run()
