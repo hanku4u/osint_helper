@@ -3,7 +3,6 @@
 from startup import environment_check
 from textual.app import App, ComposeResult
 from textual.widgets import Button, Static
-from textual.worker import run_worker
 from app.ui.menu import MainMenu
 from app.tools.harvester_runner import run_theharvester
 
@@ -24,7 +23,7 @@ class OSINTApp(App):
             custom_args = input("Enter any custom theHarvester arguments (or leave blank): ")
             return domain, custom_args
 
-        domain, custom_args = await run_worker(get_inputs)
+        domain, custom_args = await self.run_worker(get_inputs)
 
         if not domain:
             self.console.log("[!] No domain entered. Returning to menu.")
@@ -37,6 +36,7 @@ class OSINTApp(App):
             self.console.log(f"[+] theHarvester output saved to {output_path}")
         else:
             self.console.log("[!] theHarvester scan failed.")
+
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         button_id = event.button.id
