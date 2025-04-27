@@ -10,6 +10,7 @@ from app.tools.harvester_runner import run_theharvester
 from app.tools.dns_runner import run_dnsrecon
 from app.tools.whois_runner import run_whois_menu
 from app.tools.nmap_runner import run_nmap_menu
+from app.tools.report_generator import generate_session_report
 from app.db.session_db import get_connection
 
 console = Console()
@@ -124,9 +125,10 @@ def main_menu():
         console.print("[3] Run WHOIS Enumeration")
         console.print("[4] Run Nmap Scan")
         console.print("[5] Review Current Session Data")
-        console.print("[6] Exit")
+        console.print("[6] Generate Session Report")
+        console.print("[7] Exit")
 
-        choice = Prompt.ask("\nEnter your choice", choices=["1", "2", "3", "4", "5", "6"])
+        choice = Prompt.ask("\nEnter your choice", choices=["1", "2", "3", "4", "5", "6", "7"])
 
         if choice == "1":
             domain = Prompt.ask("Enter the domain or IP to scan with theHarvester")
@@ -185,5 +187,8 @@ def main_menu():
             review_session_data_menu()
 
         elif choice == "6":
+            generate_session_report()
+        
+        elif choice == "7":
             console.print("[yellow]Exiting...[/yellow]")
             break
