@@ -2,8 +2,9 @@
 
 from startup import environment_check
 from textual.app import App, ComposeResult
-from textual.widgets import Static, Button
-from app.ui.menu import MainMenu 
+from textual.widgets import Button, Static
+from textual.worker import run_worker
+from app.ui.menu import MainMenu
 from app.tools.harvester_runner import run_theharvester
 
 class OSINTApp(App):
@@ -18,12 +19,16 @@ class OSINTApp(App):
         """Prompt for domain and custom args, then run theHarvester."""
         self.console.log("[*] Starting theHarvester scan...")
 
-        domain = await self.prompt("Enter the domain or IP to scan with theHarvester:")
+        def get_inputs():
+            domain = input("Enter the domain or IP to scan with theHarvester: ")
+            custom_args = input("Enter any custom theHarvester arguments (or leave blank): ")
+            return domain, custom_args
+
+        domain, custom_args = await run_worker(get_inputs)
+
         if not domain:
             self.console.log("[!] No domain entered. Returning to menu.")
             return
-
-        custom_args = await self.prompt("Enter any custom theHarvester arguments (or leave blank):")
 
         self.console.log(f"[*] Running theHarvester on {domain}...")
         output_path = run_theharvester(domain, custom_args)
