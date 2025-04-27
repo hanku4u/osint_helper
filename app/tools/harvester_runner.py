@@ -17,21 +17,61 @@ def run_theharvester(domain: str, custom_args: str = "") -> str:
     output_filename = f"theharvester_{domain}_{timestamp}.txt"
     output_path = os.path.join(RESULTS_DIR, output_filename)
 
-    # Build default command
-    command = [
-        "theHarvester",
+    # Base default arguments
+    base_args = [
         "-d", domain,
         "-b", "all",
         "-l", "100",
     ]
 
-    # Add user arguments (they can override defaults)
-    if custom_args:
-        command += custom_args.split()
+    # Merge user arguments if any
+    user_args = custom_args.split() if custom_args else []
+
+    # If user overrides defaults (e.g., supplies -l), replace
+    final_args = []
+    skip_next = False
+    forbidden_args = ["-d", "-b", "-l"]
+
+    # Build a map of user args for easy checking
+    user_args_map = {}
+    i = 0
+    while i < len(user_args):
+        if user_args[i].startswith("-"):
+            key = user_args[i]
+            value = None
+            if (i + 1) < len(user_args) and not user_args[i+1].startswith("-"):
+                value = user_args[i+1]
+                i += 1
+            user_args_map[key] = value
+        i += 1
+
+    # Rebuild base_args, skipping if user provided override
+    i = 0
+    while i < len(base_args):
+        key = base_args[i]
+        if key in forbidden_args and key in user_args_map:
+            # User overrode this argument
+            i += 2  # skip value too
+            continue
+        final_args.append(key)
+        if (i + 1) < len(base_args):
+            final_args.append(base_args[i+1])
+        i += 2
+
+    # Add user-supplied args at the end
+    for key, value in user_args_map.items():
+        final_args.append(key)
+        if value:
+            final_args.append(value)
+
+    # Final command
+    command = ["theHarvester"] + final_args
 
     try:
-        with console.status("[bold green]Running theHarvester...[/bold green]", spinner="dots"):
-            # Run and capture output in memory first
+        full_command_str = " ".join(command)
+
+        with console.status(f"[bold green]Running: {full_command_str}[/bold green]", spinner="dots"):
+            # Capture output
             result = subprocess.run(
                 command,
                 stdout=subprocess.PIPE,
@@ -39,14 +79,14 @@ def run_theharvester(domain: str, custom_args: str = "") -> str:
                 text=True
             )
 
-        # Always save the output to file
+        # Save all output to file
         with open(output_path, "w") as output_file:
             output_file.write(result.stdout)
 
-        # Check exit code
+        # If error happened
         if result.returncode != 0:
             console.print(f"[red][!] theHarvester returned an error (exit code {result.returncode}):[/red]")
-            console.print(result.stdout)  # Show theHarvester's output immediately
+            console.print(result.stdout)
             return ""
 
     except Exception as e:
