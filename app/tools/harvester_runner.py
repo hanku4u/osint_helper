@@ -98,57 +98,56 @@ def parse_and_store_harvester_output(filepath):
     try:
         with open(filepath, "r") as file:
             lines = file.readlines()
+        lines = lines[14:]  # Ignore banner
 
-        # Step 1: Ignore first 14 lines (banner)
-        lines = lines[14:]
+        current_section = None
+        target = []
+        ips = []
+        emails = []
+        hosts = []
 
-        # Step 2: Join and split on [*] markers
-        text = ''.join(lines)
-        sections = text.split("[*]")
+        for item in lines:
+            item = item.strip()
 
-        email_pattern = re.compile(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+")
-        ip_pattern = re.compile(r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b")
+            if "Target:" in item:
+                current_section = "target"
+            elif "Hosts found:" in item:
+                current_section = "hosts"
+            elif "IP addresses found:" in item:
+                current_section = "ips"
+            elif "Email addresses found:" in item:
+                current_section = "emails"
 
-        in_hosts_section = False
+            if current_section == "target" and "Target:" in item:
+                # Extract the target name
+                target_name = item.split("Target:")[-1].strip()
+                if target_name:
+                    target.append(target_name)
 
-        for section in sections:
-            section = section.strip()
+            elif current_section == "ips":
+                if item and not item.startswith("-") and "[*]" not in item:
+                    ips.append(item)
 
-            if not section:
-                continue
+            elif current_section == "emails":
+                if item and not item.startswith("-") and "[*]" not in item:
+                    emails.append(item)
 
-            if section.startswith("Target:"):
-                target = section.split("Target:")[-1].strip()
-                if target:
-                    insert_target(target)
-                continue
+            elif current_section == "hosts":
+                if item and not item.startswith("-") and "[*]" not in item:
+                    hosts.append(item)
 
-            if section.startswith("Hosts found"):
-                in_hosts_section = True
-                continue
+        # ✅ Now insert everything into the database
+        for t in target:
+            insert_target(t)
 
-            if in_hosts_section:
-                # Hosts are dumped here after "Hosts found"
-                host_lines = section.splitlines()
+        for ip in ips:
+            insert_ip(ip)
 
-                # Skip first line if it's just dashes
-                if host_lines and set(host_lines[0]) == {"-"}:
-                    host_lines = host_lines[1:]
+        for email in emails:
+            insert_email(email)
 
-                for host in host_lines:
-                    host = host.strip()
-                    if "." in host:
-                        insert_host(host)
-
-                in_hosts_section = False  # Only process once
-                continue
-
-            # Parse other sections for emails and IPs
-            for match in email_pattern.findall(section):
-                insert_email(match)
-
-            for match in ip_pattern.findall(section):
-                insert_ip(match)
+        for host in hosts:
+            insert_host(host)
 
     except Exception as e:
         console.print(f"[red][!] Failed to parse harvester output: {e}[/red]")
