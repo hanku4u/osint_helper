@@ -1,5 +1,3 @@
-# app/db/session_db.py
-
 import sqlite3
 import os
 import datetime
@@ -7,7 +5,6 @@ import datetime
 DB_DIR = "sessions"
 os.makedirs(DB_DIR, exist_ok=True)
 
-# DB_PATH is now initialized dynamically
 DB_PATH = None
 
 def set_db_path(path=None):
@@ -27,27 +24,84 @@ def get_connection():
 def initialize_database():
     with get_connection() as conn:
         cursor = conn.cursor()
+
+        # Create tables
         cursor.execute('''
-            CREATE TABLE IF NOT EXISTS harvester_results (
+            CREATE TABLE IF NOT EXISTS targets (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                type TEXT,
-                value TEXT,
-                source TEXT
+                target TEXT
             )
         ''')
-        conn.commit()
-
-def insert_harvester_result(result_type, value, source):
-    with get_connection() as conn:
-        cursor = conn.cursor()
         cursor.execute('''
-            INSERT INTO harvester_results (type, value, source)
-            VALUES (?, ?, ?)
-        ''', (result_type, value, source))
+            CREATE TABLE IF NOT EXISTS domains (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                domain TEXT
+            )
+        ''')
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS emails (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT
+            )
+        ''')
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS ips (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ip TEXT
+            )
+        ''')
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS hosts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                host TEXT
+            )
+        ''')
+
         conn.commit()
 
-def fetch_all_harvester_results():
+# Insertion functions
+def insert_target(target):
     with get_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute('SELECT type, value, source FROM harvester_results')
-        return cursor.fetchall()
+        conn.execute('INSERT INTO targets (target) VALUES (?)', (target,))
+        conn.commit()
+
+def insert_domain(domain):
+    with get_connection() as conn:
+        conn.execute('INSERT INTO domains (domain) VALUES (?)', (domain,))
+        conn.commit()
+
+def insert_email(email):
+    with get_connection() as conn:
+        conn.execute('INSERT INTO emails (email) VALUES (?)', (email,))
+        conn.commit()
+
+def insert_ip(ip):
+    with get_connection() as conn:
+        conn.execute('INSERT INTO ips (ip) VALUES (?)', (ip,))
+        conn.commit()
+
+def insert_host(host):
+    with get_connection() as conn:
+        conn.execute('INSERT INTO hosts (host) VALUES (?)', (host,))
+        conn.commit()
+
+# Fetching functions
+def fetch_targets():
+    with get_connection() as conn:
+        return conn.execute('SELECT target FROM targets').fetchall()
+
+def fetch_domains():
+    with get_connection() as conn:
+        return conn.execute('SELECT domain FROM domains').fetchall()
+
+def fetch_emails():
+    with get_connection() as conn:
+        return conn.execute('SELECT email FROM emails').fetchall()
+
+def fetch_ips():
+    with get_connection() as conn:
+        return conn.execute('SELECT ip FROM ips').fetchall()
+
+def fetch_hosts():
+    with get_connection() as conn:
+        return conn.execute('SELECT host FROM hosts').fetchall()

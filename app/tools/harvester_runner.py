@@ -1,9 +1,17 @@
+# app/tools/harvester_runner.py
+
 import subprocess
 import datetime
 import os
 import re
 from rich.console import Console
-from app.db.session_db import insert_harvester_result
+from app.db.session_db import (
+    insert_target,
+    insert_domain,
+    insert_email,
+    insert_ip,
+    insert_host
+)
 
 console = Console()
 
@@ -76,7 +84,7 @@ def run_theharvester(domain: str, custom_args: str = "") -> str:
             console.print(result.stdout)
             return ""
 
-        # Parse and insert results
+        # ✅ After successful scan, parse the output
         parse_and_store_harvester_output(output_path)
 
     except Exception as e:
@@ -86,53 +94,59 @@ def run_theharvester(domain: str, custom_args: str = "") -> str:
     return output_path
 
 def parse_and_store_harvester_output(filepath):
-    """Parse theHarvester text output and insert results into the session database."""
+    """Parse theHarvester text output and insert results into session database."""
     try:
         with open(filepath, "r") as file:
             lines = file.readlines()
 
+        # Step 1: Ignore the first 14 lines (banner)
+        lines = lines[14:]
+
+        # Step 2: Join and split on [*] markers
+        text = ''.join(lines)
+        sections = text.split("[*]")
+
         email_pattern = re.compile(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+")
         ip_pattern = re.compile(r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b")
 
-        parsing_active = False
         in_hosts_section = False
 
-        for line in lines:
-            line = line.strip()
+        for section in sections:
+            section = section.strip()
 
-            # Skip blank lines
-            if not line:
+            if not section:
                 continue
 
-            # Detect end of header
-            if not parsing_active:
-                if line.startswith("[*] Target:"):
-                    parsing_active = True
+            # Detect and insert the target
+            if section.startswith("Target:"):
+                target = section.split("Target:")[-1].strip()
+                if target:
+                    insert_target(target)
                 continue
-
-            # --- Now we are parsing real scan results ---
 
             # Detect start of hosts section
-            if "Hosts found" in line:
+            if section.startswith("Hosts found"):
                 in_hosts_section = True
                 continue
 
-            # Parse hosts
             if in_hosts_section:
-                # End hosts section if line doesn't look like a host
-                if not ("." in line and not line.startswith("http")):
-                    in_hosts_section = False
-                    continue
-                insert_harvester_result("host", line.strip(), "theHarvester")
+                # Hosts are dumped here
+                host_lines = section.splitlines()
+                for host in host_lines:
+                    host = host.strip()
+                    if "." in host:
+                        insert_host(host)
+                in_hosts_section = False
                 continue
 
-            # Parse emails
-            for match in email_pattern.findall(line):
-                insert_harvester_result("email", match, "theHarvester")
+            # Parse other sections for emails and IPs
+            for match in email_pattern.findall(section):
+                insert_email(match)
 
-            # Parse IP addresses
-            for match in ip_pattern.findall(line):
-                insert_harvester_result("ip", match, "theHarvester")
+            for match in ip_pattern.findall(section):
+                insert_ip(match)
+
+            # (Optional) Later: parse domains separately if needed
 
     except Exception as e:
         console.print(f"[red][!] Failed to parse harvester output: {e}[/red]")
