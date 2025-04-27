@@ -32,7 +32,6 @@ def main_menu():
 
             custom_args = Prompt.ask("\nEnter any additional arguments you want to use (or leave blank)", default="")
 
-            custom_args = Prompt.ask("\nEnter any additional arguments you want to use (or leave blank)", default="")
             output_path = run_theharvester(domain, custom_args)
 
             if output_path:
