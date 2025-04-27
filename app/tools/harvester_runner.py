@@ -94,12 +94,12 @@ def run_theharvester(domain: str, custom_args: str = "") -> str:
     return output_path
 
 def parse_and_store_harvester_output(filepath):
-    """Parse theHarvester text output and insert results into session database."""
+    """Parse theHarvester text output and insert results into the session database."""
     try:
         with open(filepath, "r") as file:
             lines = file.readlines()
 
-        # Step 1: Ignore the first 14 lines (banner)
+        # Step 1: Ignore first 14 lines (banner)
         lines = lines[14:]
 
         # Step 2: Join and split on [*] markers
@@ -117,26 +117,30 @@ def parse_and_store_harvester_output(filepath):
             if not section:
                 continue
 
-            # Detect and insert the target
             if section.startswith("Target:"):
                 target = section.split("Target:")[-1].strip()
                 if target:
                     insert_target(target)
                 continue
 
-            # Detect start of hosts section
             if section.startswith("Hosts found"):
                 in_hosts_section = True
                 continue
 
             if in_hosts_section:
-                # Hosts are dumped here
+                # Hosts are dumped here after "Hosts found"
                 host_lines = section.splitlines()
+
+                # Skip first line if it's just dashes
+                if host_lines and set(host_lines[0]) == {"-"}:
+                    host_lines = host_lines[1:]
+
                 for host in host_lines:
                     host = host.strip()
                     if "." in host:
                         insert_host(host)
-                in_hosts_section = False
+
+                in_hosts_section = False  # Only process once
                 continue
 
             # Parse other sections for emails and IPs
@@ -145,8 +149,6 @@ def parse_and_store_harvester_output(filepath):
 
             for match in ip_pattern.findall(section):
                 insert_ip(match)
-
-            # (Optional) Later: parse domains separately if needed
 
     except Exception as e:
         console.print(f"[red][!] Failed to parse harvester output: {e}[/red]")
