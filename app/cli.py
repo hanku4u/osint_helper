@@ -3,7 +3,6 @@ from rich.prompt import Prompt
 from rich.table import Table
 from app.tools.harvester_runner import run_theharvester
 from app.tools.dns_runner import run_dnsrecon
-from app.db.session_db import fetch_targets, fetch_domains, fetch_emails, fetch_ips, fetch_hosts
 import sqlite3
 from app.db.session_db import get_connection
 
